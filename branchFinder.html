@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Store Locator</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet'>
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+    crossorigin="anonymous">
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+
+  <!-- Turf.js plugin -->
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+
+  <script src='src/jetco.js'></script>
+  <style>
+  </style>
+</head>
+
+<body>
+  <button onclick="getLocation()">Click to find nearest ATM</button>
+
+  <div id="users">
+    <input class="search" placeholder="Search" />
+    <div class="list list-group"></div>
+    <ul class="pagination"></ul>
+
+  </div>
+
+
+  <script>
+    var x = document.getElementById("demo");
+    var currentLocation = "";
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          currentLocation = [position.coords.longitude, position.coords.latitude];
+
+          refreshList();
+          buildList_Geo();
+        });
+
+      } else {
+        x.innerHTML = "Geolocation is not supported by this browser.";
+      }
+    }
+
+    function buildList() {
+      var options = {
+        valueNames: ['address', 'bank_name'],
+        page: 5,
+        pagination: true,
+        item: '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1 address"></h5><small class="distance"></small></div><p class="mb-1 bank_name"></p></a>'
+      };
+
+      var values = [];
+      stores.features.forEach(element => {
+        var dict = {
+          'address': element.properties.address,
+          'bank_name': element.properties.bank_name,
+          'geometry': element.geometry
+        };
+
+        return values.push(dict);
+      });
+
+      var userList = new List('users', options, values);
+    }
+
+    function buildList_Geo() {
+
+      stores.features.forEach(function (store) {
+        Object.defineProperty(store.properties, 'distance', {
+          value: turf.distance(currentLocation, store.geometry, options),
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
+      });
+
+      var values = [];
+      stores.features.forEach(element => {
+        var dict = {
+          'address': element.properties.address,
+          'bank_name': element.properties.bank_name,
+          'distance': element.properties.distance,
+          'round_dist': Math.round(element.properties.distance * 100) / 100
+        };
+
+        return values.push(dict);
+      });
+
+      var options = {
+        valueNames: ['address', 'bank_name', 'distance', 'round_dist'],
+        page: 5,
+        pagination: true,
+        item: '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start"><div class="d-flex w-100 justify-content-between"><h5 class="mb-1 address"></h5><small class="round_dist">3 days ago</small></div><p class="mb-1 bank_name"></p></a>'
+      };
+
+
+
+      userList = new List('users', options, values);
+      userList.sort('distance', { order: "asc" });
+
+      console.log(currentLocation);
+    }
+
+
+
+
+
+    function refreshList() {
+      var currentList = document.querySelector(".list");
+      while (currentList.firstChild) {
+        currentList.removeChild(currentList.firstChild);
+      }
+    }
+
+    buildList();
+
+
+  </script>
+
+
+</body>
+
+</html>

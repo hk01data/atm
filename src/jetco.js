@@ -1,4 +1,4 @@
-var stores = {
+var jetco_atm = {
     "type": "FeatureCollection",
     "features": [{
             "type": "Feature",

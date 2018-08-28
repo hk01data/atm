@@ -2,575 +2,688 @@
 <html>
 
 <head>
-  <meta charset='utf-8' />
-  <title>Store Locator</title>
-  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet'>
-  <!-- Mapbox GL JS -->
-  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.js'></script>
-  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet' />
-  <!-- Geocoder plugin -->
-  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.js'></script>
-  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.css'
-    type='text/css' />
-  <!-- Turf.js plugin -->
-  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
 
-  <script src='src/stores.js'></script>
-  <style>
-    body {
-      color: #404040;
-      font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
-      margin: 0;
-      padding: 0;
-      -webkit-font-smoothing: antialiased;
+    <meta charset='utf-8' />
+    <title>ATM</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
+        crossorigin="" />
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js" integrity="sha512-tAGcCfR4Sc5ZP5ZoVz0quoZDYX5aCtEm/eu1KhSLj2c9eFrylXZknQYmxUssFaVJKvvc0dJQixhGjG2yXWiV9Q=="
+        crossorigin=""></script>
+    <script src='src/jetco.js'></script>
+    <script src='src/hsbc.js'></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <style>
+        body {
+            color: #404040;
+            font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        * {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        .sidebar {
+            position: absolute;
+            width: 33.3333%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            border-right: 1px solid rgba(0, 0, 0, 0.25);
+        }
+
+        .pad2 {
+            padding: 20px;
+        }
+
+        #mapid {
+            position: absolute;
+            left: 33.3333%;
+            width: 66.6666%;
+            top: 0;
+            bottom: 0;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 400;
+            line-height: 20px;
+            padding: 20px 2px;
+        }
+
+        a {
+            color: #404040;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #101010;
+        }
+
+        .heading {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            min-height: 60px;
+            line-height: 60px;
+            padding: 0 10px;
+            background-color: #00853e;
+            color: #fff;
+        }
+
+        .listings {
+            height: 100%;
+            overflow: auto;
+            padding-bottom: 60px;
+        }
+
+        .listings .item {
+            display: block;
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .listings .item:last-child {
+            border-bottom: none;
+        }
+
+        .listings .item .title {
+            display: block;
+            color: #00853e;
+            font-weight: 700;
+        }
+
+        .listings .item .title small {
+            font-weight: 400;
+        }
+
+        .listings .item.active .title,
+        .listings .item .title:hover {
+            color: #8cc63f;
+        }
+
+        .listings .item.active {
+            background-color: #f8f8f8;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+            border-left: 0;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        ::-webkit-scrollbar-track {
+            background: none;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00853e;
+            border-radius: 0;
+        }
+
+        .marker {
+            border: none;
+            cursor: pointer;
+            height: 56px;
+            width: 56px;
+            background-image: url(icon/marker.png);
+            background-color: rgba(0, 0, 0, 0);
+        }
+
+        .clearfix {
+            display: block;
+        }
+
+        .clearfix:after {
+            content: '.';
+            display: block;
+            height: 0;
+            clear: both;
+            visibility: hidden;
+        }
+
+        /*Card  */
+        .card-header {
+    background-color: #f6f6f6;
+    padding: 1rem 2rem 0rem !important;
+    border: none;
+}
+.card--custom {
+    /* left: 0;
+    right: 0; */
+    /* position: fixed; */
+    background-color: #f6f6f6;
+    z-index: 5010;
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.33s linear;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+    border: none;
+    line-height: 1.8rem;
+}
+
+.card-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 220px);
+    background: url(../images/hk01watermark.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    padding: 0 1.25rem 1rem !important;
     }
 
-    * {
-      -webkit-box-sizing: border-box;
-      -moz-box-sizing: border-box;
-      box-sizing: border-box;
-    }
+.card-footer {
+    border: none !important;
+    padding: .75rem 1.25rem !important;
 
-    .sidebar {
-      position: absolute;
-      width: 33.3333%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      overflow: hidden;
-      border-right: 1px solid rgba(0, 0, 0, 0.25);
-    }
+}
+@media only screen and (max-width: 835px) {
+    .card--custom {
+       
+        /* new */
+        position: absolute;
+        left: 33.3333%;
+        width:66.6667%;
 
-    .pad2 {
-      padding: 20px;
+ /* width: 100%; */
+        bottom: 0;
+        max-height: 60%;
     }
+}
 
-    .map {
-      position: absolute;
-      left: 33.3333%;
-      width: 66.6666%;
-      top: 0;
-      bottom: 0;
-    }
+@media only screen and (min-width: 835px) {
+    .card--custom {
+        /* new */
+        position: absolute;
+        left: 33.3333%;
+        width:66.6667%;
+        bottom: 0;
 
-    h1 {
-      font-size: 22px;
-      margin: 0;
-      font-weight: 400;
-      line-height: 20px;
-      padding: 20px 2px;
+        /* max-width: 350px; */
+        max-height: 80%;
+        /* top: 100px;
+        left: 10px; */
+        border-top-left-radius: 8px !important;
+        border-top-right-radius: 8px !important;
+        border-bottom-left-radius: 8px !important;
+        border-bottom-right-radius: 8px !important;
     }
+}
 
-    a {
-      color: #404040;
-      text-decoration: none;
-    }
 
-    a:hover {
-      color: #101010;
-    }
+.close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: .5;
+    cursor: pointer;
+}
 
-    .heading {
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      min-height: 60px;
-      line-height: 60px;
-      padding: 0 10px;
-      background-color: #00853e;
-      color: #fff;
-    }
+.card-hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0s 0.33s, opacity 0.33s linear;
+}
 
-    .listings {
-      height: 100%;
-      overflow: auto;
-      padding-bottom: 60px;
-    }
+.card #branchStatus {
+    padding: 1px 10px;
+    margin-bottom: 1rem;
+    border-radius: 0.8rem;
+    font-weight: 300;
+    display: inline-block;
+    color: black;
+}
 
-    .listings .item {
-      display: block;
-      border-bottom: 1px solid #eee;
-      padding: 10px;
-      text-decoration: none;
-    }
+.card .active {
+    background: springgreen;
+}
 
-    .listings .item:last-child {
-      border-bottom: none;
-    }
+.card .inactive {
+    background: orange;
+}
 
-    .listings .item .title {
-      display: block;
-      color: #00853e;
-      font-weight: 700;
-    }
+.card .no_info {
+    background: plum;
+}
 
-    .listings .item .title small {
-      font-weight: 400;
-    }
+.card #branchName {
+    font-size: 1.6rem;
+    font-weight: 500;
+    display: block;
+    margin-bottom: .8rem;
+}
 
-    .listings .item.active .title,
-    .listings .item .title:hover {
-      color: #8cc63f;
-    }
+.card .fas {
+    margin-right: 1rem;
+}
 
-    .listings .item.active {
-      background-color: #f8f8f8;
-    }
+.card #branchDetail {
+    margin-left: 2rem;
+    margin-bottom: 0;
+}
 
-    ::-webkit-scrollbar {
-      width: 3px;
-      height: 3px;
-      border-left: 0;
-      background: rgba(0, 0, 0, 0.1);
-    }
+#opening_hours {
+    list-style-type: none;
+    margin: 0;
+    padding: 0 2rem;
+}
 
-    ::-webkit-scrollbar-track {
-      background: none;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #00853e;
-      border-radius: 0;
-    }
-
-    .marker {
-      border: none;
-      cursor: pointer;
-      height: 56px;
-      width: 56px;
-      background-image: url(icon/marker.png);
-      background-color: rgba(0, 0, 0, 0);
-    }
-
-    .clearfix {
-      display: block;
-    }
-
-    .clearfix:after {
-      content: '.';
-      display: block;
-      height: 0;
-      clear: both;
-      visibility: hidden;
-    }
-
-    /* Marker tweaks */
-    .mapboxgl-popup {
-      padding-bottom: 50px;
-    }
-
-    .mapboxgl-popup-close-button {
-      display: none;
-    }
-
-    .mapboxgl-popup-content {
-      font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
-      padding: 0;
-      width: 180px;
-    }
-
-    .mapboxgl-popup-content-wrapper {
-      padding: 1%;
-    }
-
-    .mapboxgl-popup-content h3 {
-      background: #91c949;
-      color: #fff;
-      margin: 0;
-      display: block;
-      padding: 10px;
-      border-radius: 3px 3px 0 0;
-      font-weight: 700;
-      margin-top: -15px;
-    }
-
-    .mapboxgl-popup-content h4 {
-      margin: 0;
-      display: block;
-      padding: 10px 10px 10px 10px;
-      font-weight: 400;
-    }
-
-    .mapboxgl-popup-content div {
-      padding: 10px;
-    }
-
-    .mapboxgl-container .leaflet-marker-icon {
-      cursor: pointer;
-    }
-
-    .mapboxgl-popup-anchor-top>.mapboxgl-popup-content {
-      margin-top: 15px;
-    }
-
-    .mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
-      border-bottom-color: #91c949;
-    }
-
-    .mapboxgl-ctrl-geocoder {
-      border: 2px solid #00853e;
-      border-radius: 0;
-      position: relative;
-      top: 0;
-      width: 800px;
-      margin-top: 0;
-      border: 0;
-    }
-
-    .mapboxgl-ctrl-geocoder>div {
-      min-width: 100%;
-      margin-left: 0;
-    }
-  </style>
+#issueReport {
+    display: block;
+    margin-top: 0.75rem;
+}
+    </style>
 </head>
 
 <body>
-  <div class='sidebar'>
-    <div class='heading'>
-      <h1>Our locations</h1>
+    <div class='sidebar'>
+        <div class='heading'>
+            <h1>Our locations</h1>
+        </div>
+        <div id='listings' class='listings'></div>
     </div>
-    <div id='listings' class='listings'></div>
-  </div>
-  <div id='map' class='map'> </div>
+    <div id='mapid' class='map'> </div>
+    <div class="card card--custom card-hidden">
+        <div class="card-header">                
+            <span id="branchStatus"></span>
+            <span class="card-title" id="branchName"></span>
+        </div>
+        <div class="card-body">
+            <button type="button" class="close" id="close-card" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="container">
+                <ul class="fa-ul" id= "branchDetail">
+                    <li><span class="fa-li"><i class="fas fa-map-marker-alt fa-fw"></i></span><span id="addrName"></span></li>
+                    <li><span class="fa-li"><i class="fas fa-phone fa-fw"></i></span><span id="telephone"></span></li>
+                    <li id="opening_hour_title"><span class="fa-li"><i class="fas fa-clock fa-fw"></i></span>開放時間</li>
+                  </ul>
+                <ul id="opening_hours"></ul>
 
-  <script>
-    // This will let you use the .remove() function later on
-    if (!('remove' in Element.prototype)) {
-      Element.prototype.remove = function () {
-        if (this.parentNode) {
-          this.parentNode.removeChild(this);
+                <a id="issueReport" href="#" target="_blank">資料有誤？請報料 ⟶</a>
+            </div>
+        </div>
+        <div class="card-footer"><a id="branchWebsite" href="#" target="_blank">前往網站 ⟶</a></div>
+    </div>
+
+
+    <script>
+        var all_atm = {
+            "type": "FeatureCollection",
+            "features": [...jetco_atm.features, ...hsbc_atm.features]
         }
-      };
-    }
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZXhhbXBsZXMiLCJhIjoiY2lqbmpqazdlMDBsdnRva284cWd3bm11byJ9.V6Hg2oYJwMAxeoR9GEzkAA';
-
-    // This adds the map
-    var map = new mapboxgl.Map({
-      // container id specified in the HTML
-      container: 'map',
-      // style URL
-      style: {
-        "version": 8,
-        "sources": {
-          "simple-tiles": {
-            "type": "raster",
-            // point to our third-party tiles. Note that some examples
-            // show a "url" property. This only applies to tilesets with
-            // corresponding TileJSON (such as mapbox tiles). 
-            "tiles": [
-              "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png" // https://maptile.hk01.com/tile/{z}/{x}/{y}.png
-            ],
-            "tileSize": 256
-          }
-        },
-        "layers": [{
-          "id": "simple-tiles",
-          "type": "raster",
-          "source": "simple-tiles",
-          "minzoom": 0,
-          "maxzoom": 22
-        }]
-      },
-      // initial position in [long, lat] format
-      center: [114.150300, 22.376365],
-      // initial zoom
-      zoom: 10,
-      minZoom: 9
-    });
-
-
-    // This adds the data to the map
-    map.on('load', function (e) {
-      // This is where your '.addLayer()' used to be, instead add only the source without styling a layer
-      map.addSource("places", {
-        "type": "geojson",
-        "data": stores,
-        cluster: true,
-        clusterMaxZoom: 14, // Max zoom to cluster points on
-        clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
-      });
-      // Initialize the list
-      buildLocationList(stores);
-
-      geocoder = new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        bbox: [113.421818, 21.944001, 114.650650, 22.814710]
-      });
-
-      map.addControl(geocoder, 'top-left');
-
-      map.addSource('single-point', {
-        "type": "geojson",
-        "data": {
-          "type": "FeatureCollection",
-          "features": [] // Notice that initially there are no features
-        }
-      });
-
-      map.addLayer({
-        id: "clusters",
-        type: "circle",
-        source: "places",
-        filter: ["has", "point_count"],
-        paint: {
-          // Use step expressions (https://www.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-          // with three steps to implement three types of circles:
-          //   * Blue, 20px circles when point count is less than 100
-          //   * Yellow, 30px circles when point count is between 100 and 750
-          //   * Pink, 40px circles when point count is greater than or equal to 750
-          "circle-color": [
-            "step",
-            ["get", "point_count"],
-            "#51bbd6",
-            100,
-            "#f1f075",
-            750,
-            "#f28cb1"
-          ],
-          "circle-radius": [
-            "step",
-            ["get", "point_count"],
-            20,
-            100,
-            30,
-            750,
-            40
-          ]
-        }
-      });
-
-      map.addLayer({
-        id: "cluster-count",
-        type: "symbol",
-        source: "places",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": "{point_count_abbreviated}",
-          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-          "text-size": 12
-        }
-      });
-
-      map.addLayer({
-        id: "unclustered-point",
-        type: "circle",
-        source: "places",
-        filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": "#11b4da",
-          "circle-radius": 4,
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#fff"
-        }
-      });
-
-
-
-      map.addLayer({
-        "id": "point",
-        "source": "single-point",
-        "type": "circle",
-        "paint": {
-          "circle-radius": 10,
-          "circle-color": "#007cbf",
-          "circle-stroke-width": 3,
-          "circle-stroke-color": "#fff"
-        }
-      });
-
-      // inspect a cluster on click
-      map.on('click', 'clusters', function (e) {
-        var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-        var clusterId = features[0].properties.cluster_id;
-        map.getSource('places').getClusterExpansionZoom(clusterId, function (err, zoom) {
-          if (err)
-            return;
-
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom
-          });
-        });
-      });
-
-      map.on('mouseenter', 'clusters', function () {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'clusters', function () {
-        map.getCanvas().style.cursor = '';
-      });
-
-
-      geocoder.on('result', function (ev) {
-        var searchResult = ev.result.geometry;
-        console.log(searchResult);
-        map.getSource('single-point').setData(searchResult);
-
-        var options = { units: 'kilometers' };
-        stores.features.forEach(function (store) {
-          Object.defineProperty(store.properties, 'distance', {
-            value: turf.distance(searchResult, store.geometry, options),
-            writable: true,
-            enumerable: true,
-            configurable: true
-          });
+        var atm_map = L.map('mapid', {
+            center: (screen.width >= 768) ? [22.300522, 114.172841] : [22.309763, 114.179704],
+            zoom: (screen.width >= 768) ? 14 : 13,
+            zoomSnap: 0.25,
+            maxBounds: ([
+                [21.795661, 113.073929],
+                [23.113786, 115.230749]
+            ]),
+            keyboard: false // Prevent jumping in iframe
         });
 
-        stores.features.sort(function (a, b) {
-          if (a.properties.distance > b.properties.distance) {
-            return 1;
-          }
-          if (a.properties.distance < b.properties.distance) {
-            return -1;
-          }
-          // a must be equal to b
-          return 0;
-        });
+        var osm = L.tileLayer('https://maptile.hk01.com/tile/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            minZoom: 10,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(atm_map);
 
-        var listings = document.getElementById('listings');
-        while (listings.firstChild) {
-          listings.removeChild(listings.firstChild);
-        }
 
-        buildLocationList(stores);
+        L.control.locate({
+            collapsed: false,
+            position: 'topleft',
+            setView: false
+        }).addTo(atm_map);
 
-        function sortLonLat(storeIdentifier) {
-          var lats = [stores.features[storeIdentifier].geometry.coordinates[1], searchResult.coordinates[1]]
-          var lons = [stores.features[storeIdentifier].geometry.coordinates[0], searchResult.coordinates[0]]
+function calDistance(loca_info) {
+            var options = {
+                units: 'kilometers'
+            };
 
-          var sortedLons = lons.sort(function (a, b) {
-            if (a > b) { return 1; }
-            if (a.distance < b.distance) { return -1; }
-            return 0;
-          });
-          var sortedLats = lats.sort(function (a, b) {
-            if (a > b) { return 1; }
-            if (a.distance < b.distance) { return -1; }
-            return 0;
-          });
+            all_atm.features.forEach(function(f) {
+                Object.defineProperty(f.properties, 'distance', {
+                    value: turf.distance(loca_info, f.geometry, options),
+                    writable: true,
+                    enumerable: true,
+                    configurable: true
+                });
+            })
 
-          map.fitBounds([
-            [sortedLons[0], sortedLats[0]],
-            [sortedLons[1], sortedLats[1]]
-          ], {
-              padding: 100
+            all_atm.features.sort(function(a, b) {
+                if (a.properties.distance > b.properties.distance) {
+                    return 1;
+                }
+                if (a.properties.distance < b.properties.distance) {
+                    return -1;
+                }
+                // a must be equal to b
+                return 0;
             });
+
+        }
+
+        atm_map.once('locationfound', function (e) {
+            var glatlng = [e.latlng.lng, e.latlng.lat];
+            calDistance(glatlng);
+
+            var line = turf.lineString([all_atm.features[30].geometry.coordinates, glatlng]); // Closest 3 features
+            var bbox = turf.bbox(line);
+
+            temp_bound = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
+
+            atm_map.fitBounds(temp_bound, {
+                padding: [80, 80]
+            });
+
+            // var radius = e.accuracy / 2;
+
+            // L.marker(e.latlng).addTo(atm_map)
+            //     .bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+            // L.circle(e.latlng, radius).addTo(atm_map);
+
+
+            var searchResult = [e.longitude, e.latitude];
+            console.log(searchResult);
+            // map.getSource('single-point').setData(searchResult);
+
+            var options = { units: 'kilometers' };
+            all_atm.features.forEach(function (store) {
+                Object.defineProperty(store.properties, 'distance', {
+                    value: turf.distance(searchResult, store.geometry, options),
+                    writable: true,
+                    enumerable: true,
+                    configurable: true
+                });
+            });
+
+            all_atm.features.sort(function (a, b) {
+                if (a.properties.distance > b.properties.distance) {
+                    return 1;
+                }
+                if (a.properties.distance < b.properties.distance) {
+                    return -1;
+                }
+                // a must be equal to b
+                return 0;
+            });
+
+            var listings = document.getElementById('listings');
+            while (listings.firstChild) {
+                listings.removeChild(listings.firstChild);
+            }
+
+            // jetco_lay.remove();
+
+            geo_lay = L.geoJSON(jetco_atm, {
+                onEachFeature: onEachFeature,
+                pointToLayer: function (feature, latlng) {
+                    // Change the values of these options to change the symbol's appearance
+                    let options = {
+                        radius: 6,
+                        color: "#999",
+                        fillColor: "#f1c40f",
+                        weight: 1,
+                        fillOpacity: 0.7
+                    }
+                    return L.circleMarker(latlng, options);
+                },
+                filter: function (geoJsonFeature) {
+                    if (showNearbyDistance(geoJsonFeature["properties"])) return true;
+                },
+            }).addTo(atm_map);
+
+            buildLocationList(all_atm);
+        });
+
+
+        function createCircleMarker(feature, latlng) {
+            // Change the values of these options to change the symbol's appearance
+            let options = {
+                radius: 4,
+                fillColor: (feature.properties.bank_name == "香港上海滙豐銀行") ? "#e74c3c" : "#3498db",
+                weight: 0,
+                fillOpacity: 0.7
+            }
+            return L.circleMarker(latlng, options);
+        }
+
+
+        jetco_lay = L.geoJSON(jetco_atm, {
+            onEachFeature: onEachFeature,
+            pointToLayer: createCircleMarker,
+            filter: function (geoJsonFeature) {
+                // if (showNearbyDistance(geoJsonFeature["properties"])) 
+                return true;
+            },
+        }).addTo(atm_map);
+
+        hsbc_lay = L.geoJSON(hsbc_atm, {
+            onEachFeature: onEachFeature,
+            pointToLayer: createCircleMarker,
+            filter: function (geoJsonFeature) {
+                // if (showNearbyDistance(geoJsonFeature["properties"])) 
+                return true;
+            },
+        }).addTo(atm_map);
+
+
+        var overlayMaps = {
+            "匯豐": hsbc_lay,
+            "銀通": jetco_lay
         };
 
-        sortLonLat(0);
-        createPopUp(stores.features[0]);
+        L.control.layers({}, overlayMaps, {
+            collapsed: false,
+            position: 'topright'
+        }).addTo(atm_map);
 
-      });
-    });
 
-    // This is where your interactions with the symbol layer used to be
-    // Now you have interactions with DOM markers instead
-    stores.features.forEach(function (marker, i) {
-      // Create an img element for the marker
-      var el = document.createElement('div');
-      el.id = "marker-" + i;
-      el.className = 'marker';
-      // Add markers to the map at all points
-      new mapboxgl.Marker(el, { offset: [0, -23] })
-        .setLngLat(marker.geometry.coordinates)
-        .addTo(map);
+        var card = document.querySelector('.card--custom');
 
-      el.addEventListener('click', function (e) {
-        // 1. Fly to the point
-        flyToStore(marker);
+        // card.addEventListener('click', () => {
+        //     if ()
+        //     card.style.maxHeight = "100%";
+        //     card.style.height = "100%";
+        // });
 
-        // 2. Close all other popups and display popup for clicked store
-        createPopUp(marker);
+        function onEachFeature(feature, layer) {
+            layer.on({
+                click: createPopUp
+            })
+        }
+        function buildLocationList(data) {
+            for (i = 0; i < data.features.length; i++) {
+                var currentFeature = data.features[i];
+                var prop = currentFeature.properties;
 
-        // 3. Highlight listing in sidebar (and remove highlight for all other listings)
-        var activeItem = document.getElementsByClassName('active');
+                if (prop.distance > 2) break
 
-        e.stopPropagation();
-        if (activeItem[0]) {
-          activeItem[0].classList.remove('active');
+                var listings = document.getElementById('listings');
+                var listing = listings.appendChild(document.createElement('div'));
+                listing.className = 'item';
+                listing.id = "listing-" + i;
+
+                var link = listing.appendChild(document.createElement('a'));
+                link.href = '#';
+                link.className = 'title';
+                link.dataPosition = i;
+                link.innerHTML = prop.address;
+
+                var details = listing.appendChild(document.createElement('div'));
+                details.innerHTML = prop.bank_name;
+                if (prop.phone) {
+                    details.innerHTML += ' &middot; ' + prop.phoneFormatted;
+                }
+
+                if (prop.distance) {
+                    var roundedDistance = Math.round(prop.distance * 100) / 100;
+                    details.innerHTML += '<p><strong>   ' + roundedDistance + ' 公里</strong></p>';
+                }
+
+
+                link.addEventListener('click', function (e) {
+                    // Update the currentFeature to the store associated with the clicked link
+                    var clickedListing = data.features[this.dataPosition];
+
+                    // 1. Fly to the point
+                    flyToStore(clickedListing);
+
+                    //   // 2. Close all other popups and display popup for clicked store
+                      createPopUp(clickedListing);
+
+                    // 3. Highlight listing in sidebar (and remove highlight for all other listings)
+                    var activeItem = document.getElementsByClassName('active');
+
+                    if (activeItem[0]) {
+                        activeItem[0].classList.remove('active');
+                    }
+                    this.parentNode.classList.add('active');
+
+                });
+
+
+
+            }
         }
 
-        var listing = document.getElementById('listing-' + i);
-        listing.classList.add('active');
+        buildLocationList(all_atm);
 
-      });
-    });
-
-
-    function flyToStore(currentFeature) {
-      map.flyTo({
-        center: currentFeature.geometry.coordinates,
-        zoom: 15
-      });
-    }
-
-    function createPopUp(currentFeature) {
-      var popUps = document.getElementsByClassName('mapboxgl-popup');
-      if (popUps[0]) popUps[0].remove();
-
-
-      var popup = new mapboxgl.Popup({ closeOnClick: false })
-        .setLngLat(currentFeature.geometry.coordinates)
-        .setHTML('<h3>' + currentFeature.properties.bank_name + '</h3>' +
-          '<h4>' + currentFeature.properties.address + '</h4>')
-        .addTo(map);
-    }
-
-
-    function buildLocationList(data) {
-      for (i = 0; i < data.features.length; i++) {
-        var currentFeature = data.features[i];
-        var prop = currentFeature.properties;
-
-        var listings = document.getElementById('listings');
-        var listing = listings.appendChild(document.createElement('div'));
-        listing.className = 'item';
-        listing.id = "listing-" + i;
-
-        var link = listing.appendChild(document.createElement('a'));
-        link.href = '#';
-        link.className = 'title';
-        link.dataPosition = i;
-        link.innerHTML = prop.address;
-
-        var details = listing.appendChild(document.createElement('div'));
-        details.innerHTML = prop.bank_name;
-        if (prop.phone) {
-          details.innerHTML += ' &middot; ' + prop.phoneFormatted;
+        function flyToStore(currentFeature) {
+            atm_map.panTo([currentFeature.geometry.coordinates[1], currentFeature.geometry.coordinates[0]]);
         }
 
-        if (prop.distance) {
-          var roundedDistance = Math.round(prop.distance * 100) / 100;
-          details.innerHTML += '<p><strong>   ' + roundedDistance + ' 公里</strong></p>';
+        // // The original open_close function
+        // function checkBranchStatus(p) {
+        //     // Return if no information
+        //     if (p["opening_hours"] == "") return "no_info";
+
+        //     let date = new Date();
+        //     let weekDay = date.getDay();
+        //     let time = date.getHours() * 100 + date.getMinutes();
+
+        //     let periods = p["opening_hours"];
+        //     let filValue = "inactive";
+
+        //     periods.forEach(days => {
+        //         // Always Open
+        //         if (days['open']['day'] == 0 && days['open']['time'] == '0000' && days['close'] == null) filValue = "active";
+
+        //         if (days['open']['day'] == weekDay) {
+        //             let open = parseInt(days['open']['time']);
+        //             let close = parseInt(days['close']['time']);
+        //             if (time >= open && time <= close) {
+        //                 filValue = "active";
+        //             }
+        //         }
+        //     })
+        //     return filValue
+        // }
+
+        // // The original open_close function
+        function showNearbyDistance(p) {
+            if (p["distance"] < 2) return true;
+            return false
         }
 
+    //     function createPopUp(currentFeature) {
+    //         console.log(currentFeature.properties.bank_name);
+    //         console.log(currentFeature.properties.address);
+    // }
+        function createPopUp(currentFeature) {
+            
+            //offset the centre
+            // bounds = atm_map.getBounds();
+            // lat_bounds = bounds._northEast.lat - bounds._southWest.lat;
+            // var centre = e.target.feature.geometry.coordinates //.reverse();
+            // atm_map.panTo([centre[1] - lat_bounds * 0.2, centre[0]]);
 
-        link.addEventListener('click', function (e) {
-          // Update the currentFeature to the store associated with the clicked link
-          var clickedListing = data.features[this.dataPosition];
+            // //add opening hours to the information box
+            prop = currentFeature.properties;
 
-          // 1. Fly to the point
-          flyToStore(clickedListing);
 
-          // 2. Close all other popups and display popup for clicked store
-          createPopUp(clickedListing);
 
-          // 3. Highlight listing in sidebar (and remove highlight for all other listings)
-          var activeItem = document.getElementsByClassName('active');
+            // var myUl = document.getElementById('opening_hours');
+            // myUl.innerHTML = "";
 
-          if (activeItem[0]) {
-            activeItem[0].classList.remove('active');
-          }
-          this.parentNode.classList.add('active');
+            // console.log(e.target.feature.properties)
+            // let branchStatus = (checkBranchStatus(prop));
+            // document.getElementById("branchStatus").textContent =
+            //     (branchStatus == "no_info") ? "沒有營業時間資料" : (branchStatus == "active") ? " 營業中" : "休息";
+            // document.getElementById("branchStatus").className = "";
+            // document.getElementById("branchStatus").classList.add(branchStatus);
 
+
+            // if (prop["weekday_text"] != "") {
+            //     document.getElementById("opening_hour_title").style.display = "inline";
+            //     prop["weekday_text"].forEach(
+            //         item => {
+            //             myUl.innerHTML += "<li>" + item + "</li>";
+            //         }
+            //     )
+            // } else {
+            //     document.getElementById("opening_hour_title").style.display = "none";
+            // }
+
+
+            document.getElementById("branchName").textContent = prop["bank_name"];
+            document.getElementById("addrName").textContent = (prop["address"]) ? prop["address"] : "沒有提供";
+
+            // var tele = document.getElementById("telephone");
+            // tele.innerHTML = "";
+            // if (prop["tel1"]) tele.innerHTML += prop["tel1"];
+            // if (prop["tel2"]) tele.innerHTML += "／" + prop["tel2"];
+            // if (prop["tel3"]) tele.innerHTML += "／" + prop["tel3"];
+
+            // var issueReport_url = `https://docs.google.com/forms/d/e/1FAIpQLSfb7iTwVeGGaSbER9PocNqhihbR3SVerUbW593ud5QhWiOFqA/viewform?usp=pp_url&entry.149864145=${prop["chi_name"]}&entry.759571823=${prop["chi_address"]}`;
+            // document.getElementById("issueReport").setAttribute("href", issueReport_url);
+
+            // document.getElementById("branchStatus").classList.add(branchStatus);
+
+            // if (prop["website"] != "") {
+            //     document.querySelector(".card-footer").style.display = 'block';
+            //     document.getElementById("branchWebsite").setAttribute("href", prop["website"]);
+            // }
+            // else {
+            //     document.querySelector(".card-footer").style.display = 'none';
+            // }
+
+            card.classList.remove("card-hidden");
+        }
+
+        var closeCard = document.querySelector('#close-card');
+        
+        closeCard.addEventListener('click', () => {
+            card.classList.add("card-hidden");
         });
-      }
-    }
 
+    </script>
 
-  </script>
 </body>
 
 </html>
